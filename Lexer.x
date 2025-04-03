@@ -1,9 +1,6 @@
 -- Karso: this is the basic draft of lexer, you guys can make some modification based on it 
 -- One example i can think of:
---
--- let A = readFile(A.csv)
--- let B = readFile(B.csv)
--- outputCartesian(A, B)
+
 {
 module Tokens where
 }
@@ -15,15 +12,18 @@ $alpha  = [a-zA-Z]
 
 tokens :-
   $white+                           ;  -- skip whitespace
-  "--".*                       ;  -- comment like this one 
+  "--".*                            ;  -- comment like this one 
 
   "let"                        { \p s -> TokenLet p } -- for example let A = readFile ("A.csv")
   "if"                         { \p s -> TokenIf p }
   "else"                       { \p s -> TokenElse p }
   "readFile"                   { \p s -> TokenReadFile p } -- Should be for both tasks
-  "outputCartesian"            { \p s -> TokenOutputCartesian p } -- for task 1
-  "outputPermutation"          { \p s -> TokenOutputPermutation p } -- for task 2
-  "outputExistence"            { \p s -> TokenOutputExistence p } -- for task 3
+  "cartesian"                  { \p s -> TokenCartesian p } -- for task 1
+  "permutation"                { \p s -> TokenPermutation p } -- for task 2
+  "existence"                  { \p s -> TokenExistence p } -- for task 3
+  "output"                     { \p s -> TokenOutput p}
+
+  
 
  
  -- I realised I have to use \"A.csv\" if i want a double quote since its the same as Haskell, so i just simply removed double quote to avoid unexpected errors 
@@ -51,9 +51,9 @@ data Token =
   TokenIf AlexPosn         |
   TokenElse AlexPosn       |
   TokenReadFile AlexPosn   |
-  TokenOutputCartesian AlexPosn |
-  TokenOutputPermutation AlexPosn |
-  TokenOutputExistence AlexPosn |
+  TokenCartesian AlexPosn |
+  TokenPermutation AlexPosn |
+  TokenExistence AlexPosn |
   TokenFilename AlexPosn String |
   TokenInt AlexPosn Int    |
   TokenVar AlexPosn String |
@@ -64,17 +64,19 @@ data Token =
   TokenRParen AlexPosn     |
   TokenLBrace AlexPosn     |
   TokenRBrace AlexPosn     |
+  TokenOutput AlexPosn     |
   TokenComma AlexPosn      
   deriving (Eq,Show) 
+
 
 tokenPosn :: Token -> String
 tokenPosn (TokenLet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenIf (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenElse (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenReadFile (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenOutputCartesian (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenOutputPermutation (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
-tokenPosn (TokenOutputExistence (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenCartesian (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenPermutation (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenExistence (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenFilename (AlexPn a l c) x) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenInt (AlexPn a l c) n) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenVar (AlexPn a l c) x) = show(l) ++ ":" ++ show(c)
@@ -86,4 +88,5 @@ tokenPosn (TokenRParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLBrace (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRBrace (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenComma (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenOutput (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 }

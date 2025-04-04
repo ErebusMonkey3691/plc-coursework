@@ -21,7 +21,10 @@ tokens :-
   "cartesian"                  { \p s -> TokenCartesian p } -- for task 1
   "permutation"                { \p s -> TokenPermutation p } -- for task 2
   "existence"                  { \p s -> TokenExistence p } -- for task 3
-  "output"                     { \p s -> TokenOutput p}
+  "output"                     { \p s -> TokenOutput p }
+  "leftMerge"                  { \p s -> TokenLeftMerge p } -- used to define a left merge on two colomns (task 5)
+  \'.*\'                       { \p s -> TokenString p s } -- allow for inserting of just raw strings (without need of variable or allowing variable assignment?) (task 4)
+  
 
   
 
@@ -65,7 +68,9 @@ data Token =
   TokenLBrace AlexPosn     |
   TokenRBrace AlexPosn     |
   TokenOutput AlexPosn     |
-  TokenComma AlexPosn      
+  TokenComma AlexPosn      |
+  TokenLeftMerge AlexPosn  |
+  TokenString AlexPosn String
   deriving (Eq,Show) 
 
 

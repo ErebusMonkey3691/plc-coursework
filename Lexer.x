@@ -2,7 +2,7 @@
 -- One example i can think of:
 
 {
-module Tokens where
+module Lexer where
 }
 
 %wrapper "posn" 
@@ -18,14 +18,18 @@ tokens :-
   "if"                         { \p s -> TokenIf p }
   "else"                       { \p s -> TokenElse p }
   "readFile"                   { \p s -> TokenReadFile p } -- Should be for both tasks
-  "cartesian"                  { \p s -> TokenCartesian p } -- for task 1
+  "cartesian"                  { \p s -> TokenCartesian p } -- for task 1 (we should also consider doing a N-way)
   "permutation"                { \p s -> TokenPermutation p } -- for task 2
   "existence"                  { \p s -> TokenExistence p } -- for task 3
   "output"                     { \p s -> TokenOutput p }
   "leftMerge"                  { \p s -> TokenLeftMerge p } -- used to define a left merge on two colomns (task 5)
+  "constant"                   { \p s -> TokenConstant p } -- for task 4
+  "duplicate"                  { \p s -> TokenDuplicate p } -- for task 4
   \'.*\'                       { \p s -> TokenString p s } -- allow for inserting of just raw strings (without need of variable or allowing variable assignment?) (task 4)
-  
 
+
+  -- "foo" is a fixed string, but i am not sure will Nick trick us in submission 2 (if he suddenly want a different string), 
+  -- probably use a more general function (like constant token) to do this
   
 
  
@@ -70,6 +74,8 @@ data Token =
   TokenOutput AlexPosn     |
   TokenComma AlexPosn      |
   TokenLeftMerge AlexPosn  |
+  TokenConstant AlexPosn   |
+  TokenDuplicate AlexPosn  | 
   TokenString AlexPosn String
   deriving (Eq,Show) 
 
@@ -94,4 +100,7 @@ tokenPosn (TokenLBrace (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenRBrace (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenComma (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenOutput (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenLeftMerge (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenConstant (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenDuplicate (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 }

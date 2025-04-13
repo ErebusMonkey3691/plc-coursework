@@ -4,7 +4,7 @@
 -- To do: my + - * / ++ need restriction to avoid potential errors 
 
 { 
-module Grammar where 
+module Parser where 
 import Lexer 
 }
 

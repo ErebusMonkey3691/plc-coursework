@@ -11,7 +11,7 @@
 #if __GLASGOW_HASKELL__ >= 710
 {-# LANGUAGE PartialTypeSignatures #-}
 #endif
-module Grammar where 
+module Parser where 
 import Lexer
 import qualified Data.Function as Happy_Prelude
 import qualified Data.Bool as Happy_Prelude

@@ -26,7 +26,7 @@ tokens :-
   "constant"                   { \p s -> TokenConstant p } -- for task 4
   "duplicate"                  { \p s -> TokenDuplicate p } -- for task 4
   \'.*\'                       { \p s -> TokenString p s } -- allow for inserting of just raw strings (without need of variable or allowing variable assignment?) (task 4)
-
+  
 
   -- "foo" is a fixed string, but i am not sure will Nick trick us in submission 2 (if he suddenly want a different string), 
   -- probably use a more general function (like constant token) to do this
@@ -37,7 +37,12 @@ tokens :-
  -- Also this is some sort of rules for the csv format
  [$alpha $digit \_ \-]+\.csv      { \p s -> TokenFilename p s } -- example: readFile(A.csv)
 
-  -- Operators and punctuation
+  -- Operators and punctuation (some of it i am not sure do we need it but i will put it there first)
+  "+"                          { \p s -> TokenAddition p }
+  "-"                          { \p s -> TokenSubstraction p }
+  "++"                         { \p s -> TokenConcatenation p }
+  "*"                          { \p s -> TokenMultiplication p }
+  "/"                          { \p s -> TokenDivision p }
   "="                          { \p s -> TokenEq p }
   "=="                         { \p s -> TokenEquals p }
   "!="                         { \p s -> TokenNotEquals p }
@@ -54,28 +59,33 @@ tokens :-
  
 data Token = 
  
-  TokenLet AlexPosn        |
-  TokenIf AlexPosn         |
-  TokenElse AlexPosn       |
-  TokenReadFile AlexPosn   |
-  TokenCartesian AlexPosn |
-  TokenPermutation AlexPosn |
-  TokenExistence AlexPosn |
-  TokenFilename AlexPosn String |
-  TokenInt AlexPosn Int    |
-  TokenVar AlexPosn String |
-  TokenEq AlexPosn         |
-  TokenEquals AlexPosn     |
-  TokenNotEquals AlexPosn  |
-  TokenLParen AlexPosn     |
-  TokenRParen AlexPosn     |
-  TokenLBrace AlexPosn     |
-  TokenRBrace AlexPosn     |
-  TokenOutput AlexPosn     |
-  TokenComma AlexPosn      |
-  TokenLeftMerge AlexPosn  |
-  TokenConstant AlexPosn   |
-  TokenDuplicate AlexPosn  | 
+  TokenLet AlexPosn                       |
+  TokenIf AlexPosn                        |
+  TokenElse AlexPosn                      |
+  TokenReadFile AlexPosn                  |
+  TokenCartesian AlexPosn                 |
+  TokenPermutation AlexPosn               |
+  TokenExistence AlexPosn                 |
+  TokenFilename AlexPosn String           |
+  TokenInt AlexPosn Int                   |  
+  TokenVar AlexPosn String                |
+  TokenEq AlexPosn                        |
+  TokenEquals AlexPosn                    |
+  TokenNotEquals AlexPosn                 |
+  TokenLParen AlexPosn                    |
+  TokenRParen AlexPosn                    |
+  TokenLBrace AlexPosn                    |
+  TokenRBrace AlexPosn                    |
+  TokenOutput AlexPosn                    |
+  TokenComma AlexPosn                     |
+  TokenLeftMerge AlexPosn                 |
+  TokenConstant AlexPosn                  |
+  TokenDuplicate AlexPosn                 |       
+  TokenAddition AlexPosn                  |
+  TokenConcatenation AlexPosn             |
+  TokenMultiplication AlexPosn            |
+  TokenDivision AlexPosn                  |
+  TokenSubstraction AlexPosn              |
   TokenString AlexPosn String
   deriving (Eq,Show) 
 
@@ -103,4 +113,8 @@ tokenPosn (TokenOutput (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenLeftMerge (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenConstant (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 tokenPosn (TokenDuplicate (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenAddition (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenSubstraction (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenMultiplication (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
+tokenPosn (TokenDivision (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
 }

@@ -1,6 +1,8 @@
 -- Karso: Basically finished the parser, but please check if there's any mistakes / stuff to add / delete
 -- Add notes here (or discord / github) if you have modify anything
 
+-- To do: my + - * / ++ need restriction to avoid potential errors 
+
 { 
 module Grammar where 
 import Lexer 
@@ -33,11 +35,19 @@ import Lexer
     '{'         { TokenLBrace _ }
     '}'         { TokenRBrace _ }
     ','         { TokenComma _ }
+    '+'         { TokenAddition _ }
+    '-'         { TokenSubstraction _ }
+    '++'        { TokenConcatenation _ }
+    '/'         { TokenDivision _ }
+    '*'         { TokenMultiplication _ }
 
 %right '='
 %nonassoc if
 %nonassoc else
 %left '==' '!='
+%left '*' '/'
+%left '+' '-'
+%left '++'
 
 %% 
 
@@ -76,6 +86,11 @@ Expr : var                         { Variable $1 }
      | LeftMergeExpr               { $1 }
      | ConstantExpr                { $1 }
      | DuplicateExpr               { $1 }
+     | Expr '+' Expr               { Addition $1 $3 }
+     | Expr '-' Expr               { Subtraction $1 $3 }
+     | Expr '*' Expr               { Multiplication $1 $3 }
+     | Expr '/' Expr               { Division $1 $3 }
+     | string '++' string          { Concatenation (removeQuotes $1) (removeQuotes $3) }
      | '(' Expr ')'                { $2 }
 
 -- This is for cartesian, cuz i think we need to split it out (?) Aaron, Dylan remember to double check thissssssssssssss
@@ -149,5 +164,10 @@ data Expr
   | LeftMerge Expr Expr
   | Constant String
   | Duplicate Expr Expr
+  | Addition Expr Expr
+  | Subtraction Expr Expr
+  | Multiplication Expr Expr
+  | Division Expr Expr
+  | Concatenation String String
   deriving (Show, Eq)
 }

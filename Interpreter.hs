@@ -1,22 +1,19 @@
--- Interpreter.hs
 module Interpreter where
 
 import qualified Data.Map as Map
 import System.IO
-import Grammar  -- From your parser (Grammar.y)
+import Grammar  
 import Data.List.Split (splitOn)
 
 -- Environment to hold variable bindings
 type Env = Map.Map String Value
 
--- Values in our interpreted language
 data Value
   = CSV [[String]]
   | Str String
   | IntVal Int
   deriving (Show, Eq)
 
--- Top-level interpreter
 interpretProgram :: Program -> IO ()
 interpretProgram (Program stmts) = do
   _ <- evalStmts Map.empty stmts
@@ -73,8 +70,6 @@ evalExpr env (ReadFileVar varName) = do
     Str path -> evalExpr env (ReadFile path)
     _ -> error "Expected string in readFile variable"
 
--- TODO: add other cases for Cartesian, Permutation, etc.
 
--- CSV parsing helper (very basic, update as needed)
 parseCSV :: String -> [[String]]
 parseCSV = map (splitOn ",") . lines

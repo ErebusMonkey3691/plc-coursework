@@ -1,0 +1,78 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "PLC Coursework",
+	"patterns": [
+	  {
+		"include": "#comments"
+	  },
+	  {
+		"include": "#keywords"
+	  },
+	  {
+		"include": "#functions"
+	  },
+	  {
+		"include": "#operators"
+	  },
+	  {
+		"include": "#strings"
+	  },
+	  {
+		"include": "#variables"
+	  },
+	  {
+		"include": "#numbers"
+	  },
+	  {
+		"include": "#filenames"
+	  }
+	],
+	"repository": {
+	  "comments": {
+		"name": "comment.line.double-dash.cql",
+		"match": "--.*$"
+	  },
+	  "keywords": {
+		"patterns": [{
+		  "name": "keyword.control.cql",
+		  "match": "\\b(let|if|else)\\b"
+		}]
+	  },
+	  "functions": {
+		"patterns": [{
+		  "name": "support.function.cql",
+		  "match": "\\b(readFile|cartesian|permutation|existence|output|leftMerge|constant|duplicate)\\b"
+		}]
+	  },
+	  "operators": {
+		"patterns": [{
+		  "name": "keyword.operator.cql",
+		  "match": "(\\+|\\-|\\*|\\/|=|==|!=|\\+\\+)"
+		}]
+	  },
+	  "strings": {
+		"name": "string.quoted.single.cql",
+		"begin": "'",
+		"end": "'",
+		"patterns": [
+		  {
+			"name": "constant.character.escape.cql",
+			"match": "\\\\."
+		  }
+		]
+	  },
+	  "variables": {
+		"name": "variable.other.cql",
+		"match": "\\b[a-zA-Z][a-zA-Z0-9_']*\\b"
+	  },
+	  "numbers": {
+		"name": "constant.numeric.cql",
+		"match": "\\b[0-9]+\\b"
+	  },
+	  "filenames": {
+		"name": "string.unquoted.filename.cql",
+		"match": "\\b[a-zA-Z0-9_\\-]+\\.csv\\b"
+	  }
+	},
+	"scopeName": "source.cql"
+  }

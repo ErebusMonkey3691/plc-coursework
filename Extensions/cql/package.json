@@ -1,0 +1,25 @@
+{
+  "name": "cql",
+  "displayName": "PLC",
+  "description": "PLC Coursework",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.99.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "cql",
+      "aliases": ["PLC Coursework", "cql"],
+      "extensions": [".cql"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "cql",
+      "scopeName": "source.cql",
+      "path": "./syntaxes/cql.tmLanguage.json"
+    }]
+  }
+}

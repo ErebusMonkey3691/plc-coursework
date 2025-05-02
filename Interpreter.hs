@@ -4,6 +4,7 @@ import qualified Data.Map as Map
 import System.IO
 import Grammar  
 import Data.List.Split (splitOn)
+import Data.List (sort)
 
 -- Environment to hold variable bindings
 type Env = Map.Map String Value
@@ -70,6 +71,54 @@ evalExpr env (ReadFileVar varName) = do
     Str path -> evalExpr env (ReadFile path)
     _ -> error "Expected string in readFile variable"
 
+-- Existence Check Expression
+evalExpr env (ExistenceExpr expr) = do
+  val <- evalExpr env expr
+  case val of
+    CSV rows -> do
+      -- Filter out rows where the second column is an empty string
+      let filtered = [ [a1, a2] | [a1, a2] <- rows, not (null a2) ]
+          sorted = lexSort filtered
+      return $ CSV sorted
+    _ -> error "ExistenceExpr expects a CSV with 2 columns"
 
+-- Cartesian Product Expression
+evalExpr env (CartesianExpr exprs) = do
+  -- Evaluate all expressions in the cartesian product
+  vals <- mapM (evalExpr env) exprs
+  case allCSV vals of
+    Just csvs -> return $ CSV (cartesianProduct csvs)
+    Nothing   -> error "CartesianExpr expects only CSVs"
+
+-- Permutation Expression
+evalExpr env (PermutationExpr expr) = do
+  val <- evalExpr env expr
+  case val of
+    CSV rows -> do
+      let permuted = [ [a3, a1] | [a1, a2, a3] <- rows, a1 == a2 ]
+          sorted = lexSort permuted
+      return $ CSV sorted
+    _ -> error "PermutationExpr expects a CSV with 3 columns"
+
+-- Helper function for sorting the result lexicographically
+lexSort :: [[String]] -> [[String]]
+lexSort = sort
+
+-- Helper function to check if all values are CSVs
+allCSV :: [Value] -> Maybe [[String]]
+allCSV [] = Just []
+allCSV (CSV rows:rest) = do
+  restRows <- allCSV rest
+  return (rows : restRows)
+allCSV _ = Nothing
+
+-- Cartesian product of N lists (foldr-based)
+cartesianProduct :: [[[String]]] -> [[String]]
+cartesianProduct = foldr cartesianProduct2 [[]]
+  where
+    cartesianProduct2 :: [[String]] -> [[String]] -> [[String]]
+    cartesianProduct2 xs ys = [ x ++ y | x <- xs, y <- ys ]
+
+-- Parsing CSV rows
 parseCSV :: String -> [[String]]
 parseCSV = map (splitOn ",") . lines

@@ -9,37 +9,37 @@ import Lexer
 }
 
 %name parser
-%tokentype { Token } 
+%tokentype { PosnToken } 
 %error { parseError }
 %token 
-    let         { TokenLet _ } 
-    if          { TokenIf _ }
-    else        { TokenElse _ }
-    readFile    { TokenReadFile _ }
-    cartesian   { TokenCartesian _ }
-    permutation { TokenPermutation _ }
-    existence   { TokenExistence _ }
-    output      { TokenOutput _ }
-    leftMerge   { TokenLeftMerge _ }
-    constant    { TokenConstant _ }
-    duplicate   { TokenDuplicate _ }
-    string      { TokenString _ $$ }
-    filename    { TokenFilename _ $$ }
-    int         { TokenInt _ $$ }
-    var         { TokenVar _ $$ }
-    '='         { TokenEq _ }
-    '=='        { TokenEquals _ }
-    '!='        { TokenNotEquals _ }
-    '('         { TokenLParen _ } 
-    ')'         { TokenRParen _ } 
-    '{'         { TokenLBrace _ }
-    '}'         { TokenRBrace _ }
-    ','         { TokenComma _ }
-    '+'         { TokenAddition _ }
-    '-'         { TokenSubstraction _ }
-    '++'        { TokenConcatenation _ }
-    '/'         { TokenDivision _ }
-    '*'         { TokenMultiplication _ }
+    let         { PT _ TokenLet } 
+    if          { PT _ TokenIf }
+    else        { PT _ TokenElse }
+    readFile    { PT _ TokenReadFile }
+    cartesian   { PT _ TokenCartesian  }
+    permutation { PT _ TokenPermutation  }
+    existence   { PT _ TokenExistence  }
+    output      { PT _ TokenOutput  }
+    leftMerge   { PT _ TokenLeftMerge  }
+    constant    { PT _ TokenConstant  }
+    duplicate   { PT _ TokenDuplicate  }
+    string      { PT _ (TokenString $$) }
+    filename    { PT _ (TokenFilename $$) }
+    int         { PT _ (TokenInt $$) }
+    var         { PT _ (TokenVar $$) }
+    '='         { PT _ TokenEq }
+    '=='        { PT _ TokenEquals }
+    '!='        { PT _ TokenNotEquals }
+    '('         { PT _ TokenLParen } 
+    ')'         { PT _ TokenRParen } 
+    '{'         { PT _ TokenLBrace }
+    '}'         { PT _ TokenRBrace }
+    ','         { PT _ TokenComma }
+    '+'         { PT _ TokenAddition }
+    '-'         { PT _ TokenSubstraction }
+    '++'        { PT _ TokenConcatenation }
+    '/'         { PT _ TokenDivision }
+    '*'         { PT _ TokenMultiplication }
 
 %right '='
 %nonassoc if
@@ -131,9 +131,12 @@ ExprList : Expr                   { [$1] }
 
 { 
 -- From lab 
-parseError :: [Token] -> a
+parseError :: [PosnToken] -> a
 parseError [] = error "Unknown Parse Error" 
-parseError (t:ts) = error ("Parse error at line:column " ++ (tokenPosn t))
+parseError (t:ts) = error ("Parse error at line:column " ++ showLnCol)
+  where
+    showLnCol = show(ln) ++ ":" ++ show(col) 
+    PT (AlexPn off ln col) _ = t
 
 -- Helper function to remove quotes from string literals
 removeQuotes :: String -> String

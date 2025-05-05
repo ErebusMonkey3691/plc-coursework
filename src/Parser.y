@@ -40,6 +40,8 @@ import Lexer
     '++'        { PT _ TokenConcatenation }
     '/'         { PT _ TokenDivision }
     '*'         { PT _ TokenMultiplication }
+    '['         { PT _ TokenLSquare }
+    ']'         { PT _ TokenRSquare }
 
 %right '='
 %nonassoc if
@@ -92,6 +94,7 @@ Expr : var                         { Variable $1 }
      | Expr '/' Expr               { Division $1 $3 }
      | string '++' string          { Concatenation (removeQuotes $1) (removeQuotes $3) }
      | '(' Expr ')'                { $2 }
+     | var '[' int ']'                 { IndexedVar $1 $3 }
 
 -- This is for cartesian, cuz i think we need to split it out (?) Aaron, Dylan remember to double check thissssssssssssss
 TableList : TableExpr                          { [$1] }
@@ -172,5 +175,6 @@ data Expr
   | Multiplication Expr Expr
   | Division Expr Expr
   | Concatenation String String
+  | IndexedVar String Int
   deriving (Show, Eq)
 }

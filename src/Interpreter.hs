@@ -73,3 +73,17 @@ evalExpr env (ReadFileVar varName) = do
 
 parseCSV :: String -> [[String]]
 parseCSV = map (splitOn ",") . lines
+
+-- Function to extract a column of data from a table
+indexColumn :: [[String]] -> Int -> [String]
+indexColumn [] _ = []
+indexColumn (x:xs) index
+  | index + 1 > length x = error $ show $ "Index too big!"
+  | otherwise = (x!!index) : indexColumn xs index
+
+-- Function for building a table of data (for output). Adds a given column to the table
+addColumn :: [[String]] -> [String] -> [[String]]
+addColumn [] xs = map (: []) xs
+addColumn xs ys = zipWith (\ xs' x  -> xs' ++ [x]) xs ys
+
+-- use repeat to make a constant string into an infinite list which can be used to append columns and stuff

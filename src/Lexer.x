@@ -27,6 +27,7 @@ tokens :-
   "duplicate"                  { \p s -> PT p TokenDuplicate } -- for task 4
   \'.*\'                       { \p s -> PT p (TokenString s) } -- allow for inserting of just raw strings (without need of variable or allowing variable assignment?) (task 4)
   
+  
 
   -- "foo" is a fixed string, but i am not sure will Nick trick us in submission 2 (if he suddenly want a different string), 
   -- probably use a more general function (like constant token) to do this
@@ -38,6 +39,7 @@ tokens :-
  [$alpha $digit \_ \-]+\.csv      { \p s -> PT p (TokenFilename s) } -- example: readFile(A.csv)
 
   -- Operators and punctuation (some of it i am not sure do we need it but i will put it there first)
+  -- "["$digit+"]"                { \p s -> PT p (TokenIndex s)}
   "+"                          { \p s -> PT p TokenAddition }
   "-"                          { \p s -> PT p TokenSubstraction }
   "++"                         { \p s -> PT p TokenConcatenation }
@@ -51,14 +53,16 @@ tokens :-
   "{"                          { \p s -> PT p TokenLBrace } -- Not sure do we need this, optional
   "}"                          { \p s -> PT p TokenRBrace } -- Not sure do we need this, optional
   ","                          { \p s -> PT p TokenComma } -- For example outputCartesian(A,B)
-PT 
-  $digit+                     { \p s -> PT p (TokenInt (read s)) }
+  "["                          { \p s -> PT p TokenLSquare }
+  "]"                          { \p s -> PT p TokenRSquare }
+
+-- PT 
+  $digit+                         { \p s -> PT p (TokenInt (read s)) }
   $alpha [$alpha $digit \_ \’]*   { \p s -> PT p (TokenVar s) } 
 
 {
  
 data PosnToken = PT AlexPosn Token deriving (Eq, Show)
-
 
 data Token = 
  
@@ -89,37 +93,9 @@ data Token =
   TokenMultiplication            |
   TokenDivision                  |
   TokenSubstraction              |
-  TokenString String
+  TokenString String             |
+  TokenLSquare                   |
+  TokenRSquare                   
   deriving (Eq,Show) 
 
-
--- tokenPosn :: Token -> String
--- tokenPosn (TokenLet (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenIf (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenElse (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenReadFile (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenCartesian (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenPermutation (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenExistence (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenFilename (AlexPn a l c) x) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenInt (AlexPn a l c) n) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenVar (AlexPn a l c) x) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenEq (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenEquals (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenNotEquals (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenLParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenRParen (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenLBrace (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenRBrace (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenComma (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenOutput (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenLeftMerge (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenConstant (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenDuplicate (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenAddition (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenSubstraction (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenMultiplication (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenDivision (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenConcatenation (AlexPn a l c)) = show(l) ++ ":" ++ show(c)
--- tokenPosn (TokenString (AlexPn a l c) _) = show(l) ++ ":" ++ show(c)
 }

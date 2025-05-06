@@ -95,6 +95,7 @@ Expr : var                         { Variable $1 }
      | string '++' string          { Concatenation (removeQuotes $1) (removeQuotes $3) }
      | '(' Expr ')'                { $2 }
      | var '[' int ']'                 { IndexedVar $1 $3 }
+     | Expr ',' Expr                { List $1 $3 }
 
 -- This is for cartesian, cuz i think we need to split it out (?) Aaron, Dylan remember to double check thissssssssssssss
 TableList : TableExpr                          { [$1] }
@@ -176,5 +177,6 @@ data Expr
   | Division Expr Expr
   | Concatenation String String
   | IndexedVar String Int
+  | List Expr Expr
   deriving (Show, Eq)
 }

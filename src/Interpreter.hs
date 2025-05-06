@@ -1,4 +1,5 @@
 -- {-# OPTIONS_GHC -Wno-incomplete-patterns #-}
+{-# LANGUAGE BlockArguments #-}
 module Interpreter where
 
 import qualified Data.Map as Map
@@ -6,6 +7,9 @@ import System.IO
 import Parser
 import Data.List.Split (splitOn)
 import Data.List
+import GHC.ResponseFile (expandResponse)
+import Control.Concurrent (rtsSupportsBoundThreads)
+import Control.Monad (foldM)
 
 -- Environment to hold variable bindings
 type Env = Map.Map String Value
@@ -23,10 +27,13 @@ interpretProgram (Program stmts) = do
 
 -- Evaluate a list of statements
 evalStmts :: Env -> [Statement] -> IO Env
-evalStmts env [] = return env
-evalStmts env (stmt:rest) = do
-  env' <- evalStmt env stmt
-  evalStmts env' rest
+-- evalStmts env rest = foldM evalStmt env rest
+evalStmts = foldM evalStmt
+-- evalStmts env [] = return env
+-- evalStmts env (stmt:rest) = do
+--   env' <- evalStmt env stmt
+--   evalStmts env' rest
+
 
 -- Evaluate a single statement
 evalStmt :: Env -> Statement -> IO Env
@@ -57,7 +64,7 @@ evalExpr _ (IntLiteral n) = return $ IntVal n
 evalExpr _ (String s)     = return $ Str s
 evalExpr _ (Filename f)   = return $ Str f
 evalExpr _ (ReadFile csvName) = grabCSV csvName
-evalExpr env expr = return $ CSV (evalOutput env expr)
+-- evalExpr env expr = return $ CSV (evalOutput env expr)
 
 evalExpr env (Variable name) =
   case Map.lookup name env of
@@ -73,6 +80,48 @@ evalExpr env (ReadFileVar varName) = do
   case val of
     Str path -> evalExpr env (ReadFile path)
     _ -> error "Expected string in readFile variable"
+
+-- Existence Check Expression
+evalExpr env (Existence expr) = do
+  val <- evalExpr env expr
+  case val of
+    CSV rows -> do
+      let filtered = [ [a1, a2] | [a1, a2] <- rows, not (null a2)]
+      let sorted = sort filtered
+      return $ CSV sorted
+    _ -> error "ExistenceExpr expects a CSV with 2 columns"
+
+-- Cartesian Product Expression
+evalExpr env (Cartesian exprs) = do
+  -- Evaluate all expressions in the cartesian product
+  vals <- mapM (evalExpr env) exprs
+  case allCSV vals of
+    Just csvs -> return $ CSV (cartesianProduct [csvs])
+    Nothing -> error "CartesianExpr expects only CSVs"
+
+evalExpr env (Permutation expr) = do
+  val <- evalExpr env expr
+  case val of
+    CSV rows -> do
+      let permuted = [ [a3, a1] | [a1, a2, a3] <- rows, a1 == a2 ]
+      let sorted = sort permuted
+      return $ CSV sorted
+    _ -> error "PermutationExpr expects a CSV with 3 columns"
+
+-- Helper function to check if all values are CSVs
+allCSV :: [Value] -> Maybe [[String]]
+allCSV [] = Just []
+allCSV (CSV rows:rest) = do
+  restRows <- allCSV rest
+  return (rows ++ restRows)
+allCSV _ = Nothing
+
+-- Cartesian product of N lists (foldr-based)
+cartesianProduct :: [[[String]]] -> [[String]]
+cartesianProduct = foldr cartesianProduct2 [[]]
+  where
+    cartesianProduct2 :: [[String]] -> [[String]] -> [[String]]
+    cartesianProduct2 xs ys = [ x ++ y | x <- xs, y <- ys ]
 
 -- extractIO :: IO a -> a
 -- extractIO io = case io of

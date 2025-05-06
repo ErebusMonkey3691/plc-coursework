@@ -5,6 +5,7 @@ import qualified Data.Map as Map
 import System.IO
 import Parser
 import Data.List.Split (splitOn)
+import Data.List
 
 -- Environment to hold variable bindings
 type Env = Map.Map String Value
@@ -35,7 +36,7 @@ evalStmt env (Assignment name expr) = do
 
 evalStmt env (Output expr) = do
   let val = evalOutput env expr
-  print val
+  putStrLn $ formatOutResult val
   return env
 
 evalStmt env (If cond thenStmts) = do
@@ -54,7 +55,7 @@ evalStmt env (IfElse cond thenStmts elseStmts) = do
 evalExpr :: Env -> Expr -> IO Value
 evalExpr _ (IntLiteral n) = return $ IntVal n
 evalExpr _ (String s)     = return $ Str s
-evalExpr _ (Filename f)   = return $ Str f 
+evalExpr _ (Filename f)   = return $ Str f
 evalExpr _ (ReadFile csvName) = grabCSV csvName
 evalExpr env expr = return $ CSV (evalOutput env expr)
 
@@ -78,7 +79,6 @@ evalExpr env (ReadFileVar varName) = do
 --   Prelude.ReadFile s -> s
 --   _ -> error "Not from a file, exiting..."
 
-
 evalOutput :: Env -> Expr -> [[String]]
 evalOutput env (Variable n) = varTable
   where
@@ -100,6 +100,7 @@ tableLookup n env = case Map.lookup n env of
 parseCSV :: String -> [[String]]
 parseCSV = map (splitOn ",") . lines
 
+-- Utility function to grab a table variable on demand
 grabCSV :: String -> IO Value
 grabCSV csvName = do
   fileContents <- readFile csvName
@@ -118,4 +119,9 @@ addColumn :: [[String]] -> [[String]] -> [[String]]
 addColumn [] xs = xs
 addColumn xs ys = zipWith (++) xs ys
 
--- use repeat to make a constant string into an infinite list which can be used to append columns and stuff
+-- Helper function to convert a table to a string in order to allow you to print it to stdout correctly.
+formatOutResult :: [[String]] -> String
+formatOutResult outputTable = stringToOut
+  where
+    sortedTable = sort outputTable
+    stringToOut = intercalate "\n" $ map (intercalate ",") sortedTable

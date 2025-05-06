@@ -2,7 +2,7 @@ module Interpreter where
 
 import qualified Data.Map as Map
 import System.IO
-import Grammar  
+import Parser  
 import Data.List.Split (splitOn)
 import Data.List (sort)
 

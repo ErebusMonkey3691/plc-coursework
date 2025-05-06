@@ -1,7 +1,7 @@
 module Main where
 
 import Lexer
-import Grammar
+import Parser
 import Interpreter
 import System.Environment (getArgs)
 import System.IO

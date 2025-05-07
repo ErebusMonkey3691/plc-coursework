@@ -55,6 +55,8 @@ tokens :-
   ","                          { \p s -> PT p TokenComma } -- For example outputCartesian(A,B)
   "["                          { \p s -> PT p TokenLSquare }
   "]"                          { \p s -> PT p TokenRSquare }
+  "&&"                         { \p s -> PT p TokenAnd }
+  "||"                         { \p s -> PT p TokenOr }
 
 -- PT 
   $digit+                         { \p s -> PT p (TokenInt (read s)) }
@@ -95,7 +97,9 @@ data Token =
   TokenSubstraction              |
   TokenString String             |
   TokenLSquare                   |
-  TokenRSquare                   
+  TokenRSquare                   |
+  TokenAnd                       | 
+  TokenOr
   deriving (Eq,Show) 
 
 }

@@ -10,6 +10,7 @@ import Data.List
 import GHC.ResponseFile (expandResponse)
 import Control.Concurrent (rtsSupportsBoundThreads)
 import Control.Monad (foldM)
+import Foreign.C (e2BIG)
 
 -- Environment to hold variable bindings
 type Env = Map.Map String Value
@@ -113,46 +114,36 @@ evalExpr env expr@(LeftMerge _ _ _) = return $ handleLeftMerge env expr
 
 handleLeftMerge :: Env -> Expr -> Value
 handleLeftMerge env (LeftMerge (Variable v1) (Variable v2) boolExpr)
-  | v1 == x1 && v2 == x2 = CSV $ mergeTables env v1 v2 boolExpr
-  | v1 == x2 && v2 == x1 = CSV $ mergeTables env v1 v2 (reverseBoolExpr boolExpr) -- reverse boolExpr
+  | v1 < v2 = CSV $ mergeTables env v1 v2 boolExpr False -- don't reverse the tables
+  | v2 < v1 = CSV $ mergeTables env v2 v1 boolExpr True -- reverse the tables
   | otherwise = error $ "Bindings not matching in left merge..."
-  where
-    extractVar :: Int -> BoolExpr -> Expr
-    extractVar num (Equality x1 x2)
-      | num == 1 = x1
-      | otherwise = x2
-    extractVar num (Inequality x1 x2)
-      | num == 1 = x1
-      | otherwise = x2
-    (IndexedVar x1 _) = extractVar 1 boolExpr
-    (IndexedVar x2 _) = extractVar 2 boolExpr
-    reverseBoolExpr (Equality x1 x2) = Equality x2 x1
-    reverseBoolExpr (Inequality x1 x2) = Inequality x2 x1
+handleLeftMerge _ e1 = error $ "Incorrect Arguments used for handleLeftMerge" ++ show e1
 
-mergeTables :: Env -> String -> String -> BoolExpr -> [[String]]
-mergeTables env var1 var2 boolexpr = merged
+mergeTables :: Env -> String -> String -> BoolExpr -> Bool -> [[String]]
+mergeTables env var1 var2 boolexpr reverse = merged
   where
     table1 = tableLookup var1 env
     table2 = tableLookup var2 env
 
 
-    xIndex = extractIndex 1 boolexpr
-    yIndex = extractIndex 1 boolexpr
-    
-    extractIndex :: Int -> BoolExpr -> Int
-    extractIndex num (Equality (IndexedVar _ x1) (IndexedVar _ x2)) 
-      | num == 1 = x1
-      | otherwise = x2
-    extractIndex num (Inequality (IndexedVar _ x1) (IndexedVar _ x2))
-      | num == 1 = x1
-      | otherwise = x2
-  
+    -- xIndex = extractIndex 1 boolexpr
+    -- yIndex = extractIndex 1 boolexpr
 
-    merged = [ helperMerge x y | x <- table1, y <- table2, boolFunc (x!!xIndex) (y!!yIndex) ]
+    -- extractIndex :: Int -> BoolExpr -> Int
+    -- extractIndex num (Equality (IndexedVar _ x1) (IndexedVar _ x2))
+    --   | num == 1 = x1
+    --   | otherwise = x2
+    -- extractIndex num (Inequality (IndexedVar _ x1) (IndexedVar _ x2))
+    --   | num == 1 = x1
+    --   | otherwise = x2
+    -- extractIndex _ e1 = error $ "Unrecognised boolExpr given to extractIndex: " ++ show e1
 
-    boolFunc = case boolexpr of
-      (Equality _ _) -> (==)
-      (Inequality _ _) -> (/=)
+
+    merged 
+      | reverse = [ helperMerge y x | x <- table1, y <- table2, boolFunc x y ]
+      | not reverse = [ helperMerge x y | x <- table1, y <- table2, boolFunc x y ]
+
+    boolFunc x y = boolEval x y boolexpr
 
 
     firstOtherwiseSecond "" y = y
@@ -161,6 +152,22 @@ mergeTables env var1 var2 boolexpr = merged
     -- merge two given lists, prioritising the first one
     helperMerge = zipWith firstOtherwiseSecond
 
+boolEval :: [String] -> [String] -> BoolExpr -> Bool
+boolEval xs ys (Equality e1@(IndexedVar _ _) e2@(IndexedVar _ _)) = (==) (xs!!x1) (ys!!x2)
+  where
+    (x1, x2) = orientatex1x2 e1 e2
+boolEval xs ys (Inequality e1@(IndexedVar _ _) e2@(IndexedVar _ _)) = (/=) (xs!!x1) (ys!!x2)
+  where
+    (x1, x2) = orientatex1x2 e1 e2
+boolEval xs ys (And boolExpr boolExpr2) = (&&) (boolEval xs ys boolExpr) (boolEval xs ys boolExpr2)
+boolEval xs ys (Or boolExpr boolExpr2) = (||) (boolEval xs ys boolExpr) (boolEval xs ys boolExpr2)
+boolEval _ _ _ = undefined
+
+orientatex1x2 :: Expr -> Expr -> (Int, Int)
+orientatex1x2 (IndexedVar n1 x1) (IndexedVar n2 x2)
+      | n1 < n2 = (x1, x2)
+      | otherwise = (x2, x1)
+orientatex1x2 _ _ = error $ "Orientatex1x2 called on non-indexed-vars."
 
 -- Helper function to check if all values are CSVs
 allCSV :: [Value] -> Maybe [[String]]

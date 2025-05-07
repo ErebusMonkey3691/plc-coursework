@@ -17,9 +17,14 @@ main = do
   -- putStrLn $ show $ b
   -- csvA <- readFile "test/A.csv"
   -- print $ show $ csvA
-  program <- readFile (head progArgs)
+  let programArgs = checkProgArgs progArgs
+  program <- readFile (head programArgs)
   print (alexScanTokens program)
   print (parser $ alexScanTokens program)
   interpretProgram $ Program (parser $ alexScanTokens program)
   -- x <- getArgs
   -- print x
+
+checkProgArgs :: [String] -> [String]
+checkProgArgs [] = error "Incorrect usage. Usage: plc-coursework-exe <ProgramScript.cql>"
+checkProgArgs (x:xs) = (x:xs)

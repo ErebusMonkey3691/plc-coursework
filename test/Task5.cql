@@ -1,6 +1,6 @@
-let P = readFile(P.csv)
-let Q = readFile(Q.csv)
+let E = readFile(P.csv)
+let A = readFile(Q.csv)
 
-let R = leftMerge(P, Q, P[1]==Q[1])
+let R = leftMerge(P, Q, P[0]==Q[0] )
 
 output(R)

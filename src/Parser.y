@@ -42,10 +42,13 @@ import Lexer
     '*'         { PT _ TokenMultiplication }
     '['         { PT _ TokenLSquare }
     ']'         { PT _ TokenRSquare }
+    '||'        { PT _ TokenOr }
+    '&&'        { PT _ TokenAnd }
 
 %right '='
 %nonassoc if
 %nonassoc else
+%left '&&' '||'
 %left '==' '!='
 %left '*' '/'
 %left '+' '-'
@@ -99,6 +102,9 @@ Expr : var                         { Variable $1 }
 
 BoolExpr : Expr '==' Expr          { Equality $1 $3 }
          | Expr '!=' Expr          { Inequality $1 $3 }
+         | BoolExpr '&&' BoolExpr  { And $1 $3 }
+         | BoolExpr '||' BoolExpr  { Or $1 $3 }
+         | '(' BoolExpr ')'        { $2 }
 
 -- This is for cartesian, cuz i think we need to split it out (?) Aaron, Dylan remember to double check thissssssssssssss
 TableList : TableExpr                          { [$1] }
@@ -164,6 +170,8 @@ data Statement
 data BoolExpr
   = Equality Expr Expr
   | Inequality Expr Expr
+  | And BoolExpr BoolExpr
+  | Or BoolExpr BoolExpr
   deriving (Show, Eq)
 
 data Expr

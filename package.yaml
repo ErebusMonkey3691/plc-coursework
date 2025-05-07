@@ -21,6 +21,7 @@ dependencies:
 - array
 - containers
 - split
+- HUnit
 
 ghc-options:
 - -Wall
@@ -61,3 +62,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - plc-coursework
+    - silently

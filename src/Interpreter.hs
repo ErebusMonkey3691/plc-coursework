@@ -108,6 +108,60 @@ evalExpr env (Permutation expr) = do
       return $ CSV sorted
     _ -> error "PermutationExpr expects a CSV with 3 columns"
 
+evalExpr env expr@(LeftMerge _ _ _) = return $ handleLeftMerge env expr
+
+
+handleLeftMerge :: Env -> Expr -> Value
+handleLeftMerge env (LeftMerge (Variable v1) (Variable v2) boolExpr)
+  | v1 == x1 && v2 == x2 = CSV $ mergeTables env v1 v2 boolExpr
+  | v1 == x2 && v2 == x1 = CSV $ mergeTables env v1 v2 (reverseBoolExpr boolExpr) -- reverse boolExpr
+  | otherwise = error $ "Bindings not matching in left merge..."
+  where
+    extractVar :: Int -> BoolExpr -> Expr
+    extractVar num (Equality x1 x2)
+      | num == 1 = x1
+      | otherwise = x2
+    extractVar num (Inequality x1 x2)
+      | num == 1 = x1
+      | otherwise = x2
+    (IndexedVar x1 _) = extractVar 1 boolExpr
+    (IndexedVar x2 _) = extractVar 2 boolExpr
+    reverseBoolExpr (Equality x1 x2) = Equality x2 x1
+    reverseBoolExpr (Inequality x1 x2) = Inequality x2 x1
+
+mergeTables :: Env -> String -> String -> BoolExpr -> [[String]]
+mergeTables env var1 var2 boolexpr = merged
+  where
+    table1 = tableLookup var1 env
+    table2 = tableLookup var2 env
+
+
+    xIndex = extractIndex 1 boolexpr
+    yIndex = extractIndex 1 boolexpr
+    
+    extractIndex :: Int -> BoolExpr -> Int
+    extractIndex num (Equality (IndexedVar _ x1) (IndexedVar _ x2)) 
+      | num == 1 = x1
+      | otherwise = x2
+    extractIndex num (Inequality (IndexedVar _ x1) (IndexedVar _ x2))
+      | num == 1 = x1
+      | otherwise = x2
+  
+
+    merged = [ helperMerge x y | x <- table1, y <- table2, boolFunc (x!!xIndex) (y!!yIndex) ]
+
+    boolFunc = case boolexpr of
+      (Equality _ _) -> (==)
+      (Inequality _ _) -> (/=)
+
+
+    firstOtherwiseSecond "" y = y
+    firstOtherwiseSecond x _ = x
+
+    -- merge two given lists, prioritising the first one
+    helperMerge = zipWith firstOtherwiseSecond
+
+
 -- Helper function to check if all values are CSVs
 allCSV :: [Value] -> Maybe [[String]]
 allCSV [] = Just []

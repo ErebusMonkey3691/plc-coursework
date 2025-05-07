@@ -97,6 +97,9 @@ Expr : var                         { Variable $1 }
      | var '[' int ']'                 { IndexedVar $1 $3 }
      | Expr ',' Expr                { List $1 $3 }
 
+BoolExpr : Expr '==' Expr          { Equality $1 $3 }
+         | Expr '!=' Expr          { Inequality $1 $3 }
+
 -- This is for cartesian, cuz i think we need to split it out (?) Aaron, Dylan remember to double check thissssssssssssss
 TableList : TableExpr                          { [$1] }
           | TableExpr ',' TableList            { $1 : $3 }
@@ -127,7 +130,7 @@ ConstantExpr : constant '(' string ')'              { Constant (removeQuotes $3)
 DuplicateExpr : duplicate '(' Expr ',' Expr ')'     { Duplicate $3 $5 } 
 
 -- Task 5
-LeftMergeExpr : leftMerge '(' Expr ',' Expr ')'     { LeftMerge $3 $5 }
+LeftMergeExpr : leftMerge '(' Expr ',' Expr ',' BoolExpr ')'     { LeftMerge $3 $5 $7 }
 
 -- A list of comma-separated expressions
 ExprList : Expr                   { [$1] }
@@ -158,6 +161,11 @@ data Statement
   | If Expr [Statement]
   deriving (Show, Eq)
 
+data BoolExpr
+  = Equality Expr Expr
+  | Inequality Expr Expr
+  deriving (Show, Eq)
+
 data Expr
   = Variable String
   | String String
@@ -168,7 +176,7 @@ data Expr
   | Cartesian [Expr]
   | Permutation Expr
   | Existence Expr
-  | LeftMerge Expr Expr
+  | LeftMerge Expr Expr BoolExpr
   | Constant String
   | Duplicate Expr Expr
   | Addition Expr Expr

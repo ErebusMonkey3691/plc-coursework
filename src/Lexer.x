@@ -36,7 +36,7 @@ tokens :-
  
  -- I realised I have to use \"A.csv\" if i want a double quote since its the same as Haskell, so i just simply removed double quote to avoid unexpected errors 
  -- Also this is some sort of rules for the csv format
- [$alpha $digit \_ \-]+\.csv      { \p s -> PT p (TokenFilename s) } -- example: readFile(A.csv)
+ [$alpha $digit \_ \- \/ \\]+\.csv      { \p s -> PT p (TokenFilename s) } -- example: readFile(A.csv)
 
   -- Operators and punctuation (some of it i am not sure do we need it but i will put it there first)
   -- "["$digit+"]"                { \p s -> PT p (TokenIndex s)}

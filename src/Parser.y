@@ -124,7 +124,7 @@ ReadFileExpr : readFile '(' filename ')'            { ReadFile $3 }     -- For e
 CartesianExpr : cartesian '(' TableList ')'          { Cartesian $3 } -- We can support N-way, but I think if input is only 1 csv file then it should output empty ?
 
 -- Task 2
-PermutationExpr : permutation '(' Expr ')'          { Permutation $3 } -- Only one csv file from what we saw in the spec
+PermutationExpr : permutation '(' Expr ',' BoolExpr ')'          { Permutation $3 $5 } -- Only one csv file from what we saw in the spec
 
 -- Task 3  
 ExistenceExpr : existence '(' Expr ')'              { Existence $3 } -- Only one csv file from what we saw in the spec
@@ -182,7 +182,7 @@ data Expr
   | ReadFile String
   | ReadFileVar String
   | Cartesian [Expr]
-  | Permutation Expr
+  | Permutation Expr BoolExpr
   | Existence Expr
   | LeftMerge Expr Expr BoolExpr
   | Constant String

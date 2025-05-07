@@ -107,14 +107,22 @@ evalExpr env (Cartesian exprs) = return $ CSV (cartesianProduct vals)
     vals = map (evalOutput env) exprs
 
 
-evalExpr env (Permutation expr) = do
-  val <- evalExpr env expr
-  case val of
-    CSV rows -> do
-      let permuted = [ [a3, a1] | [a1, a2, a3] <- rows, a1 == a2 ]
-      let sorted = sort permuted
-      return $ CSV sorted
-    _ -> error "PermutationExpr expects a CSV with 3 columns"
+evalExpr env (Permutation (Variable n) boolExpr) = return $ CSV filteredTable
+  where
+    table = tableLookup n env
+    filteredTable = [ x | x <- table, boolFunc x ]
+
+    boolFunc x = boolEvalSingle x boolExpr
+  -- do
+  -- val <- evalExpr env expr
+  -- case val of
+  --   CSV rows -> do
+  --     let permuted = [ [a3, a1] | [a1, a2, a3] <- rows, a1 == a2 ]
+  --     let sorted = sort permuted
+  --     return $ CSV sorted
+  --   _ -> error "PermutationExpr expects a CSV with 3 columns"
+evalExpr env (Permutation e1 e2) = error $ "Invalid Permutation syntax: permutation(" ++ show e1 ++ "," ++ show e2 ++ ")" 
+
 
 evalExpr env expr@(LeftMerge _ _ _) = return $ handleLeftMerge env expr
 
@@ -169,6 +177,17 @@ boolEval xs ys (Inequality e1@(IndexedVar _ _) e2@(IndexedVar _ _)) = (/=) (xs!!
 boolEval xs ys (And boolExpr boolExpr2) = (&&) (boolEval xs ys boolExpr) (boolEval xs ys boolExpr2)
 boolEval xs ys (Or boolExpr boolExpr2) = (||) (boolEval xs ys boolExpr) (boolEval xs ys boolExpr2)
 boolEval _ _ _ = undefined
+
+boolEvalSingle :: [String] -> BoolExpr -> Bool
+boolEvalSingle xs (Equality e1@(IndexedVar _ _) e2@(IndexedVar _ _)) = (==) (xs!!x1) (xs!!x2)
+  where
+    (x1, x2) = orientatex1x2 e1 e2
+boolEvalSingle xs (Inequality e1@(IndexedVar _ _) e2@(IndexedVar _ _)) = (/=) (xs!!x1) (xs!!x2)
+  where
+    (x1, x2) = orientatex1x2 e1 e2
+boolEvalSingle xs (And boolExpr boolExpr2) = (&&) (boolEvalSingle xs boolExpr) (boolEvalSingle xs boolExpr2)
+boolEvalSingle xs (Or boolExpr boolExpr2) = (||) (boolEvalSingle xs boolExpr) (boolEvalSingle xs boolExpr2)
+boolEvalSingle _ _ = undefined
 
 orientatex1x2 :: Expr -> Expr -> (Int, Int)
 orientatex1x2 (IndexedVar n1 x1) (IndexedVar n2 x2)

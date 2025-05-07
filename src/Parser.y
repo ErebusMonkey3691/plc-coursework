@@ -73,9 +73,9 @@ Assignment : let var '=' Expr      { Assignment $2 $4 }
 
 OutputStmt : output '(' Expr ')'   { Output $3 }
 
-IfElseStmt : if '(' Expr ')' '{' Program '}' else '{' Program '}'           { IfElse $3 $6 $10 }
+IfElseStmt : if '(' BoolExpr ')' '{' Program '}' else '{' Program '}'           { IfElse $3 $6 $10 }
                                   
-           | if '(' Expr ')' '{' Program '}'                                { If $3 $6 }
+           | if '(' BoolExpr ')' '{' Program '}'                                { If $3 $6 }
                                  
 -- I might have to separate the Expr (not sure) or user can do some carzy shit (for example cartesian(permutation, existence)) 
 -- We can do that as an extension if we can finish the basic part of it, but rn i am gonna separate it
@@ -163,8 +163,8 @@ data Program = Program [Statement]
 data Statement 
   = Assignment String Expr
   | Output Expr
-  | IfElse Expr [Statement] [Statement]
-  | If Expr [Statement]
+  | IfElse BoolExpr [Statement] [Statement]
+  | If BoolExpr [Statement]
   deriving (Show, Eq)
 
 data BoolExpr

@@ -44,17 +44,40 @@ evalStmt env (Output expr) = do
   print env
   return env
 
-evalStmt env (If cond thenStmts) = do
-  condVal <- evalExpr env cond
-  case condVal of
-    IntVal 0 -> return env
-    _        -> evalStmts env thenStmts
+-- evalStmt env (If cond thenStmts) = do
+--   condVal <- evalExpr env cond
+--   case condVal of
+--     IntVal 0 -> return env
+--     _        -> evalStmts env thenStmts
 
-evalStmt env (IfElse cond thenStmts elseStmts) = do
-  condVal <- evalExpr env cond
-  if condVal == IntVal 0
-    then evalStmts env elseStmts
-    else evalStmts env thenStmts
+evalStmt env (If cond thenStmts) 
+  | evalBool env cond = evalStmts env thenStmts
+  | otherwise = return env
+
+evalStmt env (IfElse cond thenStmts elseStmts)
+  | evalBool env cond = evalStmts env thenStmts
+  | otherwise = evalStmts env elseStmts
+
+-- evalStmt env (IfElse cond thenStmts elseStmts) = do
+--   condVal <- evalExpr env cond
+--   if condVal == IntVal 0
+--     then evalStmts env elseStmts
+--     else evalStmts env thenStmts
+
+evalBool :: Env -> BoolExpr -> Bool
+
+evalBool env (Equality (IndexedVar n x) (IndexedVar n2 x2)) = (==) (indexColumn table1 x) (indexColumn table2 x2)
+  where
+    table1 = tableLookup n env
+    table2 = tableLookup n2 env
+evalBool env (Inequality (IndexedVar n x) (IndexedVar n2 x2)) = (/=) (indexColumn table1 x) (indexColumn table2 x2)
+  where
+    table1 = tableLookup n env
+    table2 = tableLookup n2 env
+evalBool env (And e1 e2) = (&&) (evalBool env e1) (evalBool env e2)
+evalBool env (Or e1 e2) = (||) (evalBool env e1) (evalBool env e2)
+
+
 
 -- Evaluate an expression
 evalExpr :: Env -> Expr -> IO Value
@@ -227,6 +250,7 @@ evalOutput env (IndexedVar n x) = indexColumn varTable x
     varTable = tableLookup n env
 evalOutput _ (Constant n) = repeat [n]
 evalOutput env (List e1 e2) = addColumn (evalOutput env e1) (evalOutput env e2)
+evalOutput env (String s) = [[s]]
 evalOutput _ expr = error $ "Found an unmatched expr: " ++ show expr
 
 

@@ -11,6 +11,7 @@ import GHC.ResponseFile (expandResponse)
 import Control.Concurrent (rtsSupportsBoundThreads)
 import Control.Monad (foldM)
 import Foreign.C (e2BIG)
+import GHC.IO.Encoding.CodePage.Table (CompactArray(encoderValues))
 
 -- Environment to hold variable bindings
 type Env = Map.Map String Value
@@ -45,6 +46,7 @@ evalStmt env (Assignment name expr) = do
 evalStmt env (Output expr) = do
   let val = evalOutput env expr
   putStrLn $ formatOutResult val
+  print env
   return env
 
 evalStmt env (If cond thenStmts) = do
@@ -93,12 +95,17 @@ evalExpr env (Existence expr) = do
     _ -> error "ExistenceExpr expects a CSV with 2 columns"
 
 -- Cartesian Product Expression
-evalExpr env (Cartesian exprs) = do
-  -- Evaluate all expressions in the cartesian product
-  vals <- mapM (evalExpr env) exprs
-  case allCSV vals of
-    Just csvs -> return $ CSV (cartesianProduct [csvs])
-    Nothing -> error "CartesianExpr expects only CSVs"
+-- evalExpr env (Cartesian exprs) = do
+--   -- Evaluate all expressions in the cartesian product
+--   vals <- mapM (evalExpr env) exprs
+--   case allCSV vals of
+--     Just csvs -> return $ CSV (cartesianProduct [csvs])
+--     Nothing -> error "CartesianExpr expects only CSVs"
+
+evalExpr env (Cartesian exprs) = return $ CSV (cartesianProduct vals)
+  where
+    vals = map (evalOutput env) exprs
+
 
 evalExpr env (Permutation expr) = do
   val <- evalExpr env expr
@@ -139,7 +146,7 @@ mergeTables env var1 var2 boolexpr reverse = merged
     -- extractIndex _ e1 = error $ "Unrecognised boolExpr given to extractIndex: " ++ show e1
 
 
-    merged 
+    merged
       | reverse = [ helperMerge y x | x <- table1, y <- table2, boolFunc x y ]
       | not reverse = [ helperMerge x y | x <- table1, y <- table2, boolFunc x y ]
 
@@ -169,13 +176,13 @@ orientatex1x2 (IndexedVar n1 x1) (IndexedVar n2 x2)
       | otherwise = (x2, x1)
 orientatex1x2 _ _ = error $ "Orientatex1x2 called on non-indexed-vars."
 
--- Helper function to check if all values are CSVs
-allCSV :: [Value] -> Maybe [[String]]
-allCSV [] = Just []
-allCSV (CSV rows:rest) = do
-  restRows <- allCSV rest
-  return (rows ++ restRows)
-allCSV _ = Nothing
+-- -- Helper function to check if all values are CSVs
+-- allCSV :: [Value] -> Maybe [[String]]
+-- allCSV [] = Just []
+-- allCSV (CSV rows:rest) = do
+--   restRows <- allCSV rest
+--   return (rows ++ restRows)
+-- allCSV _ = Nothing
 
 -- Cartesian product of N lists (foldr-based)
 cartesianProduct :: [[[String]]] -> [[String]]
@@ -200,6 +207,7 @@ evalOutput _ (Constant n) = repeat [n]
 evalOutput env (List e1 e2) = addColumn (evalOutput env e1) (evalOutput env e2)
 evalOutput _ expr = error $ "Found an unmatched expr: " ++ show expr
 
+
 tableLookup :: String -> Env -> [[String]]
 tableLookup n env = case Map.lookup n env of
   Just (CSV table) -> table
@@ -208,7 +216,13 @@ tableLookup n env = case Map.lookup n env of
   Nothing -> error $ "Unbound variable: " ++ n
 
 parseCSV :: String -> [[String]]
-parseCSV = map (splitOn ",") . lines
+parseCSV "" = []
+parseCSV xs
+  | all (== ' ') $ xs = []
+parseCSV x = map (map trimSpaces . splitOn ",") . lines $ x
+
+trimSpaces :: String -> String
+trimSpaces = dropWhile (== ' ') . reverse . dropWhile (== ' ') . reverse
 
 -- Utility function to grab a table variable on demand
 grabCSV :: String -> IO Value

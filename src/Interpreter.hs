@@ -50,7 +50,7 @@ evalStmt env (Output expr) = do
 --     IntVal 0 -> return env
 --     _        -> evalStmts env thenStmts
 
-evalStmt env (If cond thenStmts) 
+evalStmt env (If cond thenStmts)
   | evalBool env cond = evalStmts env thenStmts
   | otherwise = return env
 
@@ -194,26 +194,40 @@ mergeTables env var1 var2 boolexpr reversed = merged
     helperMerge = zipWith firstOtherwiseSecond
 
 boolEval :: [String] -> [String] -> BoolExpr -> Bool
-boolEval xs ys (Equality e1@(IndexedVar _ _) e2@(IndexedVar _ _)) = (==) (xs!!x1) (ys!!x2)
+boolEval xs ys (Equality e1 e2) = (==) s1 s2
   where
-    (x1, x2) = orientatex1x2 e1 e2
-boolEval xs ys (Inequality e1@(IndexedVar _ _) e2@(IndexedVar _ _)) = (/=) (xs!!x1) (ys!!x2)
+    (s1, s2) = boolEval' xs ys e1 e2
+boolEval xs ys (Inequality e1 e2) = (/=) s1 s2
   where
-    (x1, x2) = orientatex1x2 e1 e2
+    (s1, s2) = boolEval' xs ys e1 e2
 boolEval xs ys (And boolExpr boolExpr2) = (&&) (boolEval xs ys boolExpr) (boolEval xs ys boolExpr2)
 boolEval xs ys (Or boolExpr boolExpr2) = (||) (boolEval xs ys boolExpr) (boolEval xs ys boolExpr2)
-boolEval _ _ _ = undefined
+
+boolEval' :: [String] -> [String] -> Expr -> Expr -> (String, String)
+boolEval' xs ys e1@(IndexedVar _ _) e2@(IndexedVar _ _) = (xs!!x1, ys!!x2 )
+  where
+    (x1, x2) = orientatex1x2 e1 e2
+boolEval' xs _ (IndexedVar _ x1) (String s) = (xs!!x1, s)
+boolEval' _ ys (String s) (IndexedVar _ x2) = (s, ys!!x2)
+boolEval' _ _ (String s) (String s2) = (s, s2)
+boolEval' _ _ _ _ = error "boolEval' undefined"
 
 boolEvalSingle :: [String] -> BoolExpr -> Bool
-boolEvalSingle xs (Equality e1@(IndexedVar _ _) e2@(IndexedVar _ _)) = (==) (xs!!x1) (xs!!x2)
+boolEvalSingle xs (Equality e1 e2) = (==) s1 s2
   where
-    (x1, x2) = orientatex1x2 e1 e2
-boolEvalSingle xs (Inequality e1@(IndexedVar _ _) e2@(IndexedVar _ _)) = (/=) (xs!!x1) (xs!!x2)
+    (s1, s2) = boolEvalSingle' xs e1 e2
+boolEvalSingle xs (Inequality e1 e2) = (/=) s1 s2
   where
-    (x1, x2) = orientatex1x2 e1 e2
+    (s1, s2) = boolEvalSingle' xs e1 e2
 boolEvalSingle xs (And boolExpr boolExpr2) = (&&) (boolEvalSingle xs boolExpr) (boolEvalSingle xs boolExpr2)
 boolEvalSingle xs (Or boolExpr boolExpr2) = (||) (boolEvalSingle xs boolExpr) (boolEvalSingle xs boolExpr2)
-boolEvalSingle _ _ = undefined
+
+boolEvalSingle' :: [String] -> Expr -> Expr -> (String, String)
+boolEvalSingle' xs (IndexedVar _ x1) (IndexedVar _ x2) = (xs!!x1,xs!!x2)
+boolEvalSingle' xs (IndexedVar _ x1) (String s) = (xs!!x1, s)
+boolEvalSingle' xs (String s) (IndexedVar _ x1) = (s, xs!!x1)
+boolEvalSingle' xs (String s) (String s1) = (s,s1)
+boolEvalSingle' _ _ _ = error "boolEvalSingle' undefined"
 
 orientatex1x2 :: Expr -> Expr -> (Int, Int)
 orientatex1x2 (IndexedVar n1 x1) (IndexedVar n2 x2)

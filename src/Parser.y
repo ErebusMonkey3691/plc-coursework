@@ -127,7 +127,7 @@ CartesianExpr : cartesian '(' TableList ')'          { Cartesian $3 } -- We can 
 PermutationExpr : permutation '(' Expr ',' BoolExpr ')'          { Permutation $3 $5 } -- Only one csv file from what we saw in the spec
 
 -- Task 3  
-ExistenceExpr : existence '(' Expr ')'              { Existence $3 } -- Only one csv file from what we saw in the spec
+ExistenceExpr : existence '(' Expr ',' int ')'              { Existence $3 $5 } -- Only one csv file from what we saw in the spec
 
 -- Task 4
 ConstantExpr : constant '(' string ')'              { Constant (removeQuotes $3) } -- Only one csv file from what we saw in the spec
@@ -183,7 +183,7 @@ data Expr
   | ReadFileVar String
   | Cartesian [Expr]
   | Permutation Expr BoolExpr
-  | Existence Expr
+  | Existence Expr Int
   | LeftMerge Expr Expr BoolExpr
   | Constant String
   | Duplicate Expr Expr

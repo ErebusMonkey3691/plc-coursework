@@ -85,14 +85,20 @@ evalExpr env (ReadFileVar varName) = do
     _ -> error "Expected string in readFile variable"
 
 -- Existence Check Expression
-evalExpr env (Existence expr) = do
-  val <- evalExpr env expr
-  case val of
-    CSV rows -> do
-      let filtered = [ [a1, a2] | [a1, a2] <- rows, not (null a2)]
-      let sorted = sort filtered
-      return $ CSV sorted
-    _ -> error "ExistenceExpr expects a CSV with 2 columns"
+evalExpr env (Existence (Variable name) rowNum) = return $ CSV filtered
+  where
+    table = tableLookup name env
+    filtered = [ a | a <- table, not $ null (a!!rowNum)]
+
+evalExpr _ (Existence e1 _) = error $ "Incorrect arguments for Existence. Expected table var, instead got: " ++ show e1
+  -- do
+  -- val <- evalExpr env expr
+  -- case val of
+  --   CSV rows -> do
+  --     let filtered = [ [a1, a2] | [a1, a2] <- rows, not (null a2)]
+  --     let sorted = sort filtered
+  --     return $ CSV sorted
+  --   _ -> error "ExistenceExpr expects a CSV with 2 columns"
 
 -- Cartesian Product Expression
 -- evalExpr env (Cartesian exprs) = do

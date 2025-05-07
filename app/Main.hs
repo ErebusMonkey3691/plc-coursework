@@ -19,8 +19,8 @@ main = do
   -- print $ show $ csvA
   let programArgs = checkProgArgs progArgs
   program <- readFile (head programArgs)
-  print (alexScanTokens program)
-  print (parser $ alexScanTokens program)
+  -- print (alexScanTokens program)
+  -- print (parser $ alexScanTokens program)
   interpretProgram $ Program (parser $ alexScanTokens program)
   -- x <- getArgs
   -- print x

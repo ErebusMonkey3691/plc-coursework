@@ -41,7 +41,7 @@ evalStmt env (Assignment name expr) = do
 evalStmt env (Output expr) = do
   let val = evalOutput env expr
   putStrLn $ formatOutResult val
-  print env
+  -- print env
   return env
 
 -- evalStmt env (If cond thenStmts) = do

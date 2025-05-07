@@ -3,15 +3,10 @@
 module Interpreter where
 
 import qualified Data.Map as Map
-import System.IO
 import Parser
 import Data.List.Split (splitOn)
-import Data.List
-import GHC.ResponseFile (expandResponse)
-import Control.Concurrent (rtsSupportsBoundThreads)
+import Data.List ( sort, intercalate )
 import Control.Monad (foldM)
-import Foreign.C (e2BIG)
-import GHC.IO.Encoding.CodePage.Table (CompactArray(encoderValues))
 
 -- Environment to hold variable bindings
 type Env = Map.Map String Value
@@ -74,9 +69,9 @@ evalExpr env (Variable name) =
     Just v  -> return v
     Nothing -> error $ "Unbound variable: " ++ name
 
-evalExpr env (ReadFile path) = do
-  content <- readFile path
-  return $ CSV (parseCSV content)
+-- evalExpr env (ReadFile path) = do
+--   content <- readFile path
+--   return $ CSV (parseCSV content)
 
 evalExpr env (ReadFileVar varName) = do
   val <- evalExpr env (Variable varName)
@@ -127,21 +122,22 @@ evalExpr env (Permutation (Variable n) boolExpr) = return $ CSV filteredTable
   --     let sorted = sort permuted
   --     return $ CSV sorted
   --   _ -> error "PermutationExpr expects a CSV with 3 columns"
-evalExpr env (Permutation e1 e2) = error $ "Invalid Permutation syntax: permutation(" ++ show e1 ++ "," ++ show e2 ++ ")" 
+evalExpr env (Permutation e1 e2) = error $ "Invalid Permutation syntax: permutation(" ++ show e1 ++ "," ++ show e2 ++ ")"
 
 
-evalExpr env expr@(LeftMerge _ _ _) = return $ handleLeftMerge env expr
+evalExpr env expr@(LeftMerge {}) = return $ handleLeftMerge env expr
 
+evalExpr _ e1 = error $ "Uncaught expression: " ++ show e1
 
 handleLeftMerge :: Env -> Expr -> Value
 handleLeftMerge env (LeftMerge (Variable v1) (Variable v2) boolExpr)
   | v1 < v2 = CSV $ mergeTables env v1 v2 boolExpr False -- don't reverse the tables
   | v2 < v1 = CSV $ mergeTables env v2 v1 boolExpr True -- reverse the tables
-  | otherwise = error $ "Bindings not matching in left merge..."
+  | otherwise = error "Bindings not matching in left merge..."
 handleLeftMerge _ e1 = error $ "Incorrect Arguments used for handleLeftMerge" ++ show e1
 
 mergeTables :: Env -> String -> String -> BoolExpr -> Bool -> [[String]]
-mergeTables env var1 var2 boolexpr reverse = merged
+mergeTables env var1 var2 boolexpr reversed = merged
   where
     table1 = tableLookup var1 env
     table2 = tableLookup var2 env
@@ -161,8 +157,9 @@ mergeTables env var1 var2 boolexpr reverse = merged
 
 
     merged
-      | reverse = [ helperMerge y x | x <- table1, y <- table2, boolFunc x y ]
-      | not reverse = [ helperMerge x y | x <- table1, y <- table2, boolFunc x y ]
+      | reversed = [ helperMerge y x | x <- table1, y <- table2, boolFunc x y ]
+      -- not reverse
+      | otherwise = [ helperMerge x y | x <- table1, y <- table2, boolFunc x y ]
 
     boolFunc x y = boolEval x y boolexpr
 
@@ -199,7 +196,7 @@ orientatex1x2 :: Expr -> Expr -> (Int, Int)
 orientatex1x2 (IndexedVar n1 x1) (IndexedVar n2 x2)
       | n1 < n2 = (x1, x2)
       | otherwise = (x2, x1)
-orientatex1x2 _ _ = error $ "Orientatex1x2 called on non-indexed-vars."
+orientatex1x2 _ _ = error "Orientatex1x2 called on non-indexed-vars."
 
 -- -- Helper function to check if all values are CSVs
 -- allCSV :: [Value] -> Maybe [[String]]
@@ -243,7 +240,7 @@ tableLookup n env = case Map.lookup n env of
 parseCSV :: String -> [[String]]
 parseCSV "" = []
 parseCSV xs
-  | all (== ' ') $ xs = []
+  | all (== ' ') xs = []
 parseCSV x = map (map trimSpaces . splitOn ",") . lines $ x
 
 trimSpaces :: String -> String
@@ -260,7 +257,7 @@ grabCSV csvName = do
 indexColumn :: [[String]] -> Int -> [[String]]
 indexColumn [] _ = []
 indexColumn (x:xs) index
-  | index + 1 > length x = error $ show $ "Index too big!"
+  | index + 1 > length x = error $ show "Index too big!"
   | otherwise = [x!!index] : indexColumn xs index
 
 -- Function for building a table of data (for output). Adds a given column to the table

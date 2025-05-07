@@ -27,7 +27,6 @@ library
   exposed-modules:
       Interpreter
       Lexer
-      Lib
       Parser
   other-modules:
       Paths_plc_coursework

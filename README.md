@@ -33,7 +33,7 @@ Make sure you have stack installed !
   stack build
 ```
 ```bash
-  stack exec -- plc-coursework-exe
+  stack exec -- plc-coursework-exe <ProgramScript.cql>
 ```
 
 

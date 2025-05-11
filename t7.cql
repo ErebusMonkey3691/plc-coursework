@@ -17,3 +17,8 @@ let filtered = permutation(combined,
                            combined[2] == combined[4])
 
 output(filtered[0], filtered[5])
+
+
+
+
+
